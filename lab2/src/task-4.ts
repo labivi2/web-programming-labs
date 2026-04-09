@@ -1,7 +1,5 @@
 export {};
 
-// ===== BASE ABSTRACT CLASS =====
-
 abstract class BaseNotifier {
   constructor(protected readonly name: string) {}
 
