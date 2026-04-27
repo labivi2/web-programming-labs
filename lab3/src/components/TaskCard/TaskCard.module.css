@@ -1,0 +1,37 @@
+.card {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+  background: #fff;
+}
+
+.cardLow {
+  border-left: 5px solid green;
+}
+
+.cardMedium {
+  border-left: 5px solid orange;
+}
+
+.cardHigh {
+  border-left: 5px solid red;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.meta {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
