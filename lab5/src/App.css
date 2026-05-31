@@ -3,3 +3,51 @@
   margin: 0 auto;
   padding: 40px 20px;
 }
+
+.app-header {
+  margin-bottom: 32px;
+}
+
+.app-header h1 {
+  margin-bottom: 8px;
+}
+
+.todo-section {
+  text-align: left;
+}
+
+.todo-section h2 {
+  margin-bottom: 16px;
+}
+
+.status {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.error {
+  color: #b00020;
+  border-color: #e6a1ad;
+  background: #fff3f5;
+}
+
+.todo-list {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.todo-item {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+}
+
+.completed {
+  color: #777;
+  text-decoration: line-through;
+}
