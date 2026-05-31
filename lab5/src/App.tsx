@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { todosApi } from './api/todos'
@@ -13,12 +13,27 @@ function App() {
     queryFn: todosApi.getAll,
   })
 
+  const refreshTodos = () => {
+    queryClient.invalidateQueries({ queryKey: ['todos'] })
+  }
+
   const createTodoMutation = useMutation({
     mutationFn: todosApi.create,
     onSuccess: () => {
       setTitle('')
-      queryClient.invalidateQueries({ queryKey: ['todos'] })
+      refreshTodos()
     },
+  })
+
+  const updateTodoMutation = useMutation({
+    mutationFn: ({ id, completed }: { id: number; completed: boolean }) =>
+      todosApi.update(id, { completed }),
+    onSuccess: refreshTodos,
+  })
+
+  const deleteTodoMutation = useMutation({
+    mutationFn: todosApi.remove,
+    onSuccess: refreshTodos,
   })
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -38,33 +53,37 @@ function App() {
   return (
     <main className="app">
       <section className="app-header">
-        <h1>{'\u041b\u0430\u0431\u043e\u0440\u0430\u0442\u043e\u0440\u043d\u0430 \u0440\u043e\u0431\u043e\u0442\u0430 \u21165'}</h1>
-        <p>{'\u0406\u043d\u0442\u0435\u0433\u0440\u0430\u0446\u0456\u044f \u0437 API'}</p>
+        <h1>Лабораторна робота №5</h1>
+        <p>Інтеграція з API</p>
       </section>
 
       <section className="todo-section">
-        <h2>{'\u0421\u043f\u0438\u0441\u043e\u043a \u0437\u0430\u0432\u0434\u0430\u043d\u044c'}</h2>
+        <h2>Список завдань</h2>
 
         <form className="todo-form" onSubmit={handleSubmit}>
           <input
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            placeholder="РќРѕРІРµ Р·Р°РІРґР°РЅРЅСЏ"
+            placeholder="Нове завдання"
           />
           <button type="submit" disabled={createTodoMutation.isPending}>
-            {createTodoMutation.isPending ? 'Р”РѕРґР°РІР°РЅРЅСЏ...' : 'Р”РѕРґР°С‚Рё'}
+            {createTodoMutation.isPending ? 'Додавання...' : 'Додати'}
           </button>
         </form>
 
         {createTodoMutation.isError && (
-          <p className="status error">{'\u041d\u0435 \u0432\u0434\u0430\u043b\u043e\u0441\u044f \u0434\u043e\u0434\u0430\u0442\u0438 \u0437\u0430\u0432\u0434\u0430\u043d\u043d\u044f'}</p>
+          <p className="status error">Не вдалося додати завдання</p>
         )}
 
-        {isLoading && <p className="status">{'\u0417\u0430\u0432\u0430\u043d\u0442\u0430\u0436\u0435\u043d\u043d\u044f...'}</p>}
+        {(updateTodoMutation.isError || deleteTodoMutation.isError) && (
+          <p className="status error">Не вдалося оновити список</p>
+        )}
+
+        {isLoading && <p className="status">Завантаження...</p>}
 
         {isError && (
           <p className="status error">
-            {error instanceof Error ? error.message : '\u041d\u0435 \u0432\u0434\u0430\u043b\u043e\u0441\u044f \u0437\u0430\u0432\u0430\u043d\u0442\u0430\u0436\u0438\u0442\u0438 \u0441\u043f\u0438\u0441\u043e\u043a'}
+            {error instanceof Error ? error.message : 'Не вдалося завантажити список'}
           </p>
         )}
 
@@ -72,9 +91,31 @@ function App() {
           <ul className="todo-list">
             {todos.map((todo) => (
               <li key={todo.id} className="todo-item">
-                <span className={todo.completed ? 'completed' : ''}>
-                  {todo.title}
-                </span>
+                <label className="todo-label">
+                  <input
+                    type="checkbox"
+                    checked={todo.completed}
+                    disabled={updateTodoMutation.isPending}
+                    onChange={(event) =>
+                      updateTodoMutation.mutate({
+                        id: todo.id,
+                        completed: event.target.checked,
+                      })
+                    }
+                  />
+                  <span className={todo.completed ? 'completed' : ''}>
+                    {todo.title}
+                  </span>
+                </label>
+
+                <button
+                  type="button"
+                  className="delete-button"
+                  disabled={deleteTodoMutation.isPending}
+                  onClick={() => deleteTodoMutation.mutate(todo.id)}
+                >
+                  Видалити
+                </button>
               </li>
             ))}
           </ul>
