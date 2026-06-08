@@ -69,7 +69,12 @@ export class TasksService {
       return null;
     }
 
-    Object.assign(task, dto);
+    for (const [key, value] of Object.entries(dto)) {
+      if (value !== undefined) {
+        Object.assign(task, { [key]: value });
+      }
+    }
+
     return task;
   }
 

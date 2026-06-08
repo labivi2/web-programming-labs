@@ -43,12 +43,18 @@ describe('TasksService', () => {
   });
 
   it('should update a task', () => {
+    const original = service.findOne('1');
     const task = service.update('1', {
       status: 'done',
       priority: 'low',
     });
 
-    expect(task).toMatchObject({ status: 'done', priority: 'low' });
+    expect(task).toMatchObject({
+      title: original?.title,
+      description: original?.description,
+      status: 'done',
+      priority: 'low',
+    });
   });
 
   it('should return null when updating an unknown task', () => {
