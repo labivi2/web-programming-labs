@@ -32,6 +32,10 @@ export class Task {
   createdAt!: Date;
 
   @ManyToMany(() => Tag, (tag) => tag.tasks, { onDelete: 'CASCADE' })
-  @JoinTable({ name: 'task_tags' })
+  @JoinTable({
+    name: 'task_tags',
+    joinColumn: { name: 'taskId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'tagId', referencedColumnName: 'id' },
+  })
   tags!: Tag[];
 }
