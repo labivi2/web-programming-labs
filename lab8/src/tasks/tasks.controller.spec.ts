@@ -1,66 +1,57 @@
 import { NotFoundException } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
+import type { Task } from './entities/task.entity';
 import { TasksController } from './tasks.controller';
 import { TasksService } from './tasks.service';
 
 describe('TasksController', () => {
   let controller: TasksController;
+  let service: jest.Mocked<TasksService>;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    const module = await Test.createTestingModule({
       controllers: [TasksController],
-      providers: [TasksService],
+      providers: [
+        {
+          provide: TasksService,
+          useValue: {
+            findAll: jest.fn(),
+            findByStatus: jest.fn(),
+            findOne: jest.fn(),
+            create: jest.fn(),
+            update: jest.fn(),
+            remove: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
-    controller = module.get<TasksController>(TasksController);
+    controller = module.get(TasksController);
+    service = module.get(TasksService);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
+  it('should return all tasks', async () => {
+    service.findAll.mockResolvedValue([]);
+
+    await expect(controller.findAll()).resolves.toEqual([]);
   });
 
-  it('should return all tasks', () => {
-    expect(controller.findAll()).toHaveLength(3);
+  it('should return one task', async () => {
+    const task = { id: 1, title: 'Task' } as Task;
+    service.findOne.mockResolvedValue(task);
+
+    await expect(controller.findOne('1')).resolves.toBe(task);
   });
 
-  it('should filter tasks by status', () => {
-    expect(controller.findByStatus('pending')).toHaveLength(1);
+  it('should throw when a task is not found', async () => {
+    service.findOne.mockResolvedValue(null);
+
+    await expect(controller.findOne('999')).rejects.toThrow(NotFoundException);
   });
 
-  it('should return one task', () => {
-    expect(controller.findOne('1')).toMatchObject({ id: 1 });
-  });
+  it('should throw when deleting an unknown task', async () => {
+    service.remove.mockResolvedValue(false);
 
-  it('should throw when a task is not found', () => {
-    expect(() => controller.findOne('999')).toThrow(NotFoundException);
-  });
-
-  it('should create a task', () => {
-    expect(
-      controller.create({
-        title: 'New task',
-        priority: 'medium',
-      }),
-    ).toMatchObject({ status: 'pending' });
-  });
-
-  it('should update a task', () => {
-    expect(controller.update('1', { status: 'done' })).toMatchObject({
-      status: 'done',
-    });
-  });
-
-  it('should throw when updating an unknown task', () => {
-    expect(() => controller.update('999', { status: 'done' })).toThrow(
-      NotFoundException,
-    );
-  });
-
-  it('should delete a task', () => {
-    expect(controller.remove('1')).toBeUndefined();
-  });
-
-  it('should throw when deleting an unknown task', () => {
-    expect(() => controller.remove('999')).toThrow(NotFoundException);
+    await expect(controller.remove('999')).rejects.toThrow(NotFoundException);
   });
 });

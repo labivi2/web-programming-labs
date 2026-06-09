@@ -1,72 +1,91 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { Test } from '@nestjs/testing';
+import type { Repository } from 'typeorm';
+import { Tag } from '../tags/tag.entity';
+import { Task } from './entities/task.entity';
 import { TasksService } from './tasks.service';
 
 describe('TasksService', () => {
   let service: TasksService;
+  let tasksRepository: jest.Mocked<Repository<Task>>;
+  let tagsRepository: jest.Mocked<Repository<Tag>>;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [TasksService],
+    const module = await Test.createTestingModule({
+      providers: [
+        TasksService,
+        {
+          provide: getRepositoryToken(Task),
+          useValue: {
+            find: jest.fn(),
+            findOne: jest.fn(),
+            create: jest.fn(),
+            save: jest.fn(),
+            delete: jest.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(Tag),
+          useValue: {
+            findBy: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
-    service = module.get<TasksService>(TasksService);
+    service = module.get(TasksService);
+    tasksRepository = module.get(getRepositoryToken(Task));
+    tagsRepository = module.get(getRepositoryToken(Tag));
   });
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
+  it('should return tasks with tags', async () => {
+    tasksRepository.find.mockResolvedValue([]);
 
-  it('should return all tasks', () => {
-    expect(service.findAll()).toHaveLength(3);
-  });
+    await service.findAll();
 
-  it('should filter tasks by status', () => {
-    expect(service.findByStatus('pending')).toHaveLength(1);
-  });
-
-  it('should return one task', () => {
-    expect(service.findOne('1')).toMatchObject({ id: 1 });
-  });
-
-  it('should return null for an unknown task', () => {
-    expect(service.findOne('999')).toBeNull();
-  });
-
-  it('should create a task', () => {
-    const task = service.create({
-      title: 'New task',
-      priority: 'medium',
-    });
-
-    expect(task.status).toBe('pending');
-    expect(service.findAll()).toHaveLength(4);
-  });
-
-  it('should update a task', () => {
-    const original = service.findOne('1');
-    const task = service.update('1', {
-      status: 'done',
-      priority: 'low',
-    });
-
-    expect(task).toMatchObject({
-      title: original?.title,
-      description: original?.description,
-      status: 'done',
-      priority: 'low',
+    expect(tasksRepository.find).toHaveBeenCalledWith({
+      relations: { tags: true },
     });
   });
 
-  it('should return null when updating an unknown task', () => {
-    expect(service.update('999', { status: 'done' })).toBeNull();
+  it('should find one task with tags', async () => {
+    tasksRepository.findOne.mockResolvedValue(null);
+
+    await service.findOne(1);
+
+    expect(tasksRepository.findOne).toHaveBeenCalledWith({
+      where: { id: 1 },
+      relations: { tags: true },
+    });
   });
 
-  it('should delete a task', () => {
-    expect(service.remove('1')).toBe(true);
-    expect(service.findOne('1')).toBeNull();
+  it('should create a task with tags', async () => {
+    const tags = [{ id: 1, name: 'api', tasks: [] }] as Tag[];
+    const task = { id: 1, title: 'Task', tags } as Task;
+    tagsRepository.findBy.mockResolvedValue(tags);
+    tasksRepository.create.mockReturnValue(task);
+    tasksRepository.save.mockResolvedValue(task);
+    tasksRepository.findOne.mockResolvedValue(task);
+
+    const result = await service.create({
+      title: 'Task',
+      priority: 'high',
+      tagIds: [1],
+    });
+
+    expect(result).toBe(task);
+    expect(tagsRepository.findBy).toHaveBeenCalled();
   });
 
-  it('should return false when deleting an unknown task', () => {
-    expect(service.remove('999')).toBe(false);
+  it('should return null when updating an unknown task', async () => {
+    tasksRepository.findOne.mockResolvedValue(null);
+
+    await expect(service.update(999, { status: 'done' })).resolves.toBeNull();
+  });
+
+  it('should return delete result', async () => {
+    tasksRepository.delete.mockResolvedValue({ affected: 1, raw: {} });
+
+    await expect(service.remove(1)).resolves.toBe(true);
   });
 });

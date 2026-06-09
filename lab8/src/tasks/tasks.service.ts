@@ -1,97 +1,76 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { In, Repository } from 'typeorm';
+import { Tag } from '../tags/tag.entity';
 import type { CreateTaskDto } from './dto/create-task.dto';
 import type { UpdateTaskDto } from './dto/update-task.dto';
-import type { Task } from './entities/task.entity';
+import { Task, type TaskStatus } from './entities/task.entity';
 
 @Injectable()
 export class TasksService {
-  private tasks: Task[] = [
-    {
-      id: 1,
-      title: 'Learn Nest.js',
-      description: 'Study services and dependency injection',
-      status: 'pending',
-      priority: 'high',
-      createdAt: new Date('2026-06-01T10:00:00.000Z'),
-      tags: [],
-    },
-    {
-      id: 2,
-      title: 'Create CRUD API',
-      description: 'Add all task operations',
-      status: 'in-progress',
-      priority: 'medium',
-      createdAt: new Date('2026-06-02T10:00:00.000Z'),
-      tags: [],
-    },
-    {
-      id: 3,
-      title: 'Test validation',
-      description: 'Check invalid requests',
-      status: 'done',
-      priority: 'low',
-      createdAt: new Date('2026-06-03T10:00:00.000Z'),
-      tags: [],
-    },
-  ];
+  constructor(
+    @InjectRepository(Task)
+    private readonly tasksRepository: Repository<Task>,
+    @InjectRepository(Tag)
+    private readonly tagsRepository: Repository<Tag>,
+  ) {}
 
-  findAll(): Task[] {
-    return this.tasks;
+  findAll(): Promise<Task[]> {
+    return this.tasksRepository.find({ relations: { tags: true } });
   }
 
-  findByStatus(status?: string): Task[] {
-    if (!status) {
-      return this.tasks;
-    }
-
-    return this.tasks.filter((task) => task.status === status);
+  findByStatus(status?: string): Promise<Task[]> {
+    return this.tasksRepository.find({
+      where: status ? { status: status as TaskStatus } : {},
+      relations: { tags: true },
+    });
   }
 
-  findOne(id: string | number): Task | null {
-    return this.tasks.find((task) => task.id === Number(id)) ?? null;
+  findOne(id: string | number): Promise<Task | null> {
+    return this.tasksRepository.findOne({
+      where: { id: Number(id) },
+      relations: { tags: true },
+    });
   }
 
-  create(dto: CreateTaskDto): Task {
-    const task: Task = {
-      id: Date.now(),
-      title: dto.title,
-      description: dto.description ?? '',
-      status: 'pending',
-      priority: dto.priority,
-      createdAt: new Date(),
-      tags: [],
-    };
+  async create(dto: CreateTaskDto): Promise<Task> {
+    const { tagIds, ...values } = dto;
+    const tags = tagIds?.length
+      ? await this.tagsRepository.findBy({ id: In(tagIds) })
+      : [];
+    const task = this.tasksRepository.create({
+      ...values,
+      description: values.description ?? null,
+      tags,
+    });
+    const saved = await this.tasksRepository.save(task);
 
-    this.tasks.push(task);
-    return task;
+    return (await this.findOne(saved.id)) as Task;
   }
 
-  update(id: string | number, dto: UpdateTaskDto): Task | null {
-    const task = this.findOne(id);
+  async update(
+    id: string | number,
+    dto: UpdateTaskDto,
+  ): Promise<Task | null> {
+    const task = await this.findOne(id);
 
     if (!task) {
       return null;
     }
 
     const { tagIds, ...values } = dto;
+    Object.assign(task, values);
 
-    for (const [key, value] of Object.entries(values)) {
-      if (value !== undefined) {
-        Object.assign(task, { [key]: value });
-      }
+    if (tagIds) {
+      task.tags = await this.tagsRepository.findBy({ id: In(tagIds) });
     }
 
-    return task;
+    await this.tasksRepository.save(task);
+    return this.findOne(task.id);
   }
 
-  remove(id: string | number): boolean {
-    const index = this.tasks.findIndex((task) => task.id === Number(id));
-
-    if (index === -1) {
-      return false;
-    }
-
-    this.tasks.splice(index, 1);
-    return true;
+  async remove(id: string | number): Promise<boolean> {
+    const result = await this.tasksRepository.delete(Number(id));
+    return Boolean(result.affected);
   }
 }

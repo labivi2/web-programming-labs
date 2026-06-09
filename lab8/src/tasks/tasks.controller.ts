@@ -20,18 +20,18 @@ export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
   @Get()
-  findAll(): Task[] {
+  findAll(): Promise<Task[]> {
     return this.tasksService.findAll();
   }
 
   @Get('search')
-  findByStatus(@Query('status') status?: string): Task[] {
+  findByStatus(@Query('status') status?: string): Promise<Task[]> {
     return this.tasksService.findByStatus(status);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Task {
-    const task = this.tasksService.findOne(id);
+  async findOne(@Param('id') id: string): Promise<Task> {
+    const task = await this.tasksService.findOne(id);
 
     if (!task) {
       throw new NotFoundException(`Завдання #${id} не знайдено`);
@@ -42,13 +42,16 @@ export class TasksController {
 
   @Post()
   @HttpCode(201)
-  create(@Body() dto: CreateTaskDto): Task {
+  create(@Body() dto: CreateTaskDto): Promise<Task> {
     return this.tasksService.create(dto);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateTaskDto): Task {
-    const task = this.tasksService.update(id, dto);
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateTaskDto,
+  ): Promise<Task> {
+    const task = await this.tasksService.update(id, dto);
 
     if (!task) {
       throw new NotFoundException(`Завдання #${id} не знайдено`);
@@ -59,8 +62,8 @@ export class TasksController {
 
   @Delete(':id')
   @HttpCode(204)
-  remove(@Param('id') id: string): void {
-    const removed = this.tasksService.remove(id);
+  async remove(@Param('id') id: string): Promise<void> {
+    const removed = await this.tasksService.remove(id);
 
     if (!removed) {
       throw new NotFoundException(`Завдання #${id} не знайдено`);
