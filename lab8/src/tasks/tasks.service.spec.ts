@@ -25,7 +25,7 @@ describe('TasksService', () => {
   });
 
   it('should return one task', () => {
-    expect(service.findOne('1')).toMatchObject({ id: '1' });
+    expect(service.findOne('1')).toMatchObject({ id: 1 });
   });
 
   it('should return null for an unknown task', () => {

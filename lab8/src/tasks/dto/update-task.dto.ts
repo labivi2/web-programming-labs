@@ -1,5 +1,7 @@
 import {
+  IsArray,
   IsIn,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -27,4 +29,9 @@ export class UpdateTaskDto {
     message: 'Пріоритет має бути: low, medium або high',
   })
   priority?: 'low' | 'medium' | 'high';
+
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  tagIds?: number[];
 }

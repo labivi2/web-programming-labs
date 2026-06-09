@@ -28,7 +28,7 @@ describe('TasksController', () => {
   });
 
   it('should return one task', () => {
-    expect(controller.findOne('1')).toMatchObject({ id: '1' });
+    expect(controller.findOne('1')).toMatchObject({ id: 1 });
   });
 
   it('should throw when a task is not found', () => {
