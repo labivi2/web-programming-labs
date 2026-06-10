@@ -19,6 +19,8 @@ export const useAuthStore = create<AuthStore>((set) => ({
   login: async (data) => {
     const response = await api.post<LoginResponse>('/auth/login', data);
     localStorage.setItem('token', response.data.access_token);
+    const userResponse = await api.get<User>('/auth/me');
+    set({ user: userResponse.data });
   },
 
   register: async (data) => {
