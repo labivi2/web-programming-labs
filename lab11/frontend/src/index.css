@@ -5,4 +5,75 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+main {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.card {
+  width: 100%;
+  max-width: 560px;
+  padding: 28px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px #00000018;
+}
+
+.card h1 {
+  margin-top: 0;
+}
+
+form {
+  display: grid;
+  gap: 18px;
+}
+
+button {
+  padding: 11px;
+  border: 0;
+  border-radius: 6px;
+  color: white;
+  background: #2563eb;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.preview,
+.result {
+  text-align: center;
+}
+
+.preview img,
+.result img {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 8px;
+}
+
+progress {
+  width: 100%;
+}
+
+.error {
+  color: #dc2626;
+}
+
+.result {
+  margin-top: 24px;
+  color: #15803d;
 }
