@@ -10,6 +10,9 @@ async function bootstrap() {
       transform: true,
     }),
   );
+  app.enableCors({
+    origin: 'http://localhost:5173',
+  });
   const port = parseInt(process.env.PORT ?? '3000', 10);
   await app.listen(port);
   console.log(`Server started on port ${port}`);

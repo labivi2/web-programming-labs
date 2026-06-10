@@ -14,8 +14,39 @@ input {
   font: inherit;
 }
 
+header {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0 24px;
+  background: white;
+  box-shadow: 0 2px 8px #00000012;
+}
+
+header a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+header nav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+header button {
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 6px;
+  color: white;
+  background: #dc2626;
+  cursor: pointer;
+}
+
 .auth-page {
-  min-height: 100vh;
+  min-height: calc(100vh - 64px);
   display: grid;
   place-items: center;
   padding: 20px;
@@ -63,4 +94,24 @@ input {
 .error {
   margin: -8px 0 0;
   color: #dc2626;
+}
+
+.profile-page {
+  min-height: calc(100vh - 64px);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.profile-card {
+  width: 100%;
+  max-width: 500px;
+  padding: 28px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px #00000018;
+}
+
+.profile-card h1 {
+  margin-top: 0;
 }
